@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum GoodsType {
+  OpenaiAccount
+}
+
+// 商品分为大类和小类
+model Goods {
+  id            Int             @id @default(autoincrement())
+  name          String
+  price         Int
+  // 商品大类，也是表名
+  type          GoodsType
+  description   String?
+  remark        String?
+  OpenaiAccount OpenaiAccount[]
+}
+
+enum OpenaiAccountStatus {
+  AVAILABLE
+  API_ACCESS_DENIED
+  DEACTIVATED
+  UNKNOWN
+}
+
+enum OpenaiAccountUsage {
+  SOLD
+  SELF_USE
+  UNUSED
+}
+
+model OpenaiAccount {
+  id             Int                 @id @default(autoincrement())
+  goods          Goods               @relation(fields: [goodsId], references: [id])
+  goodsId         Int
+  account        String?
+  emailPassword  String?
+  openaiPassword String?
+  apikey         String?
+  usage          OpenaiAccountUsage  @default(UNUSED)
+  status         OpenaiAccountStatus @default(AVAILABLE)
+  totalGrant     Float?
+  availableGrant Float?
+}
+
+enum PayMethod {
+  ALIPAY
+  WECHAT
+}
+
+enum OrderStatus {
+  UNPAID
+  PAID
+  CANCEL
+}
+
+model Order {
+  // cuid2
+  id             Int         @id
+  name           String
+  totalPrice     Float
+  // Json Type {"id": [GoodsDetailID]}
+  goodsDetailIds Json
+  count          Int
+  customerEmail  String
+  payMethod      PayMethod
+  orderStatus    OrderStatus @default(UNPAID)
+  remark         String?
+}
